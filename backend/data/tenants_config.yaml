@@ -1,0 +1,5 @@
+# Tenants Configuration
+tenants:
+  - name: Gases del Orinoco
+    id: gases_orinoco
+    ...
