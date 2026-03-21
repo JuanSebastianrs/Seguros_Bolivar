@@ -1,1 +1,0 @@
-# Gases Orinoco Strategy

@@ -1,11 +1,16 @@
-# Docker Compose file
 version: '3.8'
+
 services:
   backend:
     build: ./backend
     ports:
       - "8000:8000"
-  frontend:
-    build: ./frontend
-    ports:
-      - "3000:3000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

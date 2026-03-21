@@ -1,1 +1,0 @@
-# Tech Solutions Strategy

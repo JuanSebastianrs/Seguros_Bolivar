@@ -1,1 +1,0 @@
-# Logística Andina Strategy

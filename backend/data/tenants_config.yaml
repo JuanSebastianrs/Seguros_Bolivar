@@ -1,5 +1,98 @@
-# Tenants Configuration
-tenants:
-  - name: Gases del Orinoco
-    id: gases_orinoco
-    ...
+# ==============================================================
+# Configuración Multitenant del BPO
+# Estrategia basada en datos (YAML) para cumplir con Open/Closed:
+# - Nuevas empresas se agregan modificando solo este archivo
+# - Nuevas categorías o reglas se agregan sin tocar código
+# - Solo se requiere código personalizado para integraciones
+#   ad-hoc (ej. Mensajería del Valle con servicio externo)
+# ==============================================================
+
+empresas:
+  "GASES DEL ORINOCO":
+    metodo_prioridad: "ia"
+    campos_obligatorios:
+      - "cedula"
+      - "nombre"
+      - "problema"
+    categorias:
+      - "Incidente técnico"
+      - "Reclamo de facturación"
+      - "Consulta administrativa"
+    reglas_enrutamiento:
+      "Incidente técnico":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Reclamo de facturación":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "RESPUESTA DIRECTA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Consulta administrativa":
+        "Alta": "RESPUESTA DIRECTA"
+        "Media": "RESPUESTA DIRECTA"
+        "Baja": "RESPUESTA DIRECTA"
+
+  "MENSAJERIA DEL VALLE":
+    metodo_prioridad: "externo"  # Usa servicio externo para prioridad (Bono +6%)
+    campos_obligatorios:
+      - "tipo_documento"
+      - "numero_documento"
+      - "tipo_solicitud"
+    categorias:
+      - "Retraso de envío"
+      - "Dañado en tránsito"
+    reglas_enrutamiento:
+      "Retraso de envío":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Dañado en tránsito":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+
+  "LOGISTICA ANDINA":
+    metodo_prioridad: "ia"
+    campos_obligatorios:
+      - "placa_vehiculo"
+      - "novedad"
+    categorias:
+      - "Falla mecánica"
+      - "Reporte de accidente"
+      - "Retraso en ruta"
+    reglas_enrutamiento:
+      "Falla mecánica":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Reporte de accidente":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Retraso en ruta":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "RESPUESTA DIRECTA"
+        "Baja": "RESPUESTA DIRECTA"
+
+  "TECH SOLUTIONS":
+    metodo_prioridad: "ia"
+    campos_obligatorios:
+      - "email_usuario"
+      - "error_code"
+    categorias:
+      - "Caída de servicio"
+      - "Soporte Nivel 1"
+      - "Cambio de contraseña"
+    reglas_enrutamiento:
+      "Caída de servicio":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "GESTIÓN EXTERNA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Soporte Nivel 1":
+        "Alta": "GESTIÓN EXTERNA"
+        "Media": "RESPUESTA DIRECTA"
+        "Baja": "RESPUESTA DIRECTA"
+      "Cambio de contraseña":
+        "Alta": "RESPUESTA DIRECTA"
+        "Media": "RESPUESTA DIRECTA"
+        "Baja": "RESPUESTA DIRECTA"
