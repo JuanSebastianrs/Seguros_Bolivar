@@ -66,9 +66,21 @@ cp .env.example .env
 ```
 Edite `.env`:
 ```env
-GROQ_API_KEY=gsk_xxx...
-GEMINI_API_KEY=AIzaSy_xxx...   # Omitir si usa GCP Application Default Credentials
-SIMULAR_FALLOS_BPO=false       # Cambiar a true para probar tolerancia a fallos en creación de casos
+# ============================================================
+# Variables de entorno para el Microservicio BPO IA
+# Copie este archivo como .env y reemplace los valores
+# ============================================================
+
+# --- Proveedores de IA ---
+GROQ_API_KEY=gsk_************************
+GEMINI_API_KEY=  # Dejar vacío si se usa autenticación por SDK de Google
+
+# --- Feature Flags ---
+SIMULAR_FALLOS_BPO=false
+
+# --- Servidor ---
+APP_ENV=development
+LOG_LEVEL=INFO
 ```
 
 ### 2. Forma A: Ejecución Directa (Virtual Environment)
@@ -85,6 +97,16 @@ Desde la raíz del repositorio:
 ```bash
 docker-compose up --build
 ```
+
+Una vez que los contenedores estén en ejecución, puedes acceder a los siguientes enlaces de manera local:
+
+**Frontend (Vite + React):**
+* **Aplicación Web:** [http://localhost:5173](http://localhost:5173)
+
+**Backend (FastAPI):**
+* **API Base:** [http://localhost:8000](http://localhost:8000)
+* **Documentación Swagger (OpenAPI) / Prueba de Endpoints:** [http://localhost:8000/docs](http://localhost:8000/docs)
+* **Documentación ReDoc:** [http://localhost:8000/redoc](http://localhost:8000/redoc)
 
 ---
 
@@ -124,4 +146,16 @@ curl -X POST http://localhost:8000/api/v1/solicitudes \
 
 ---
 
-*Desarrollado para el Caso de Estudio IA [Profesional Senior] de Seguros Bolívar.*
+## 📄 Documentación Técnica
+
+La memoria técnica completa del proyecto, incluyendo el análisis del caso de estudio, decisiones de arquitectura y justificación de patrones, se encuentra disponible en:
+
+📎 [`docs/src/Seguros_bolivar.pdf`](docs/src/Seguros_bolivar.pdf)
+
+---
+
+*Desarrollado para el Caso de Estudio IA [Profesional Senior] de Seguros Bolívar.*  
+**Por: Juan Sebastian Rodríguez Salazar**
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/juan-sebastian-rs/)
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/JuanSebastianrs)

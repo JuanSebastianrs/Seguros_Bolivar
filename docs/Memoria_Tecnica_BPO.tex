@@ -53,9 +53,9 @@ A continuación, se describen las decisiones ingenieriles, los patrones matemát
 
 Acorde a las vanguardias de la ingeniería de software, el ciclo de vida de este desarrollo implementó metodologías de desarrollo asistido por IA (\textit{Agentic Workflows}). 
 
-La complejidad del rol Senior no radicó en la escritura manual de la sintaxis, sino en el diseño arquitectónico previo: se construyó un marco de contexto estricto (\textit{Context Engineering}) definiendo contratos \texttt{Pydantic}, interfaces abstractas y diagramas de estado. Esta base documental rigurosa fue utilizada para orquestar agentes generativos (mediante el entorno Antigravity), logrando materializar el código de manera predecible y determinista. 
+Se construyó un marco de contexto estricto (\textit{Context Engineering}) definiendo contratos \texttt{Pydantic}, interfaces abstractas y diagramas de estado. Esta base documental rigurosa fue utilizada para orquestar agentes generativos (mediante el entorno Antigravity), logrando materializar el código de manera predecible y determinista. 
 
-Este enfoque multiplicó la velocidad de entrega, demostrando que el futuro del desarrollo recae en cómo gobernar y enjaezar herramientas de IA para producir código que respete inquebrantablemente los principios SOLID y la Arquitectura Hexagonal dictada por el humano.
+Este enfoque multiplicó la velocidad de entrega, demostrando que el manejo de las herramientas de AI para el  desarrollo y producir código que respete los principios SOLID y la Arquitectura Hexagonal.
 
 \section{Diseño Arquitectónico y Metodología}
 
@@ -64,14 +64,15 @@ La solución fue concebida iterativamente con el objetivo principal de aislar la
 \begin{figure*}[htbp]
 \centering
 % NOTA: Asegúrate de subir tu imagen diagrama_arquitectura.png o .jpg a Overleaf
-\includegraphics[width=1\textwidth]{diagrama_arquitectura.png}
+\includegraphics[width=1\textwidth]{diagrama_arquitectura.jpg}
 \caption{Diagrama de Arquitectura Hexagonal, Inversión de Dependencias y orquestación BPO.}
 \label{fig:arquitectura}
 \end{figure*}
 
+\vspace{1.cm}
 \subsection{Abstracción Multi-Tenant y Patrones}
 
-El principal reto era cumplir el principio \textit{Open/Closed (SOLID)}. Para evitar modificar código fuente ante el ingreso de una nueva compañía al BPO, se centralizaron las reglas de negocio en el archivo \texttt{data/tenants\_config.yaml}. Este archivo contiene los campos requeridos, las categorías y las matrices matemáticas de enrutamiento por cruce de prioridades.
+El principal reto era cumplir el principio \textit{Open/Closed (SOLID)}. Para evitar modificar código fuente ante el ingreso de una nueva compañía al BPO, se centralizaron las reglas de negocio en el archivo \texttt{data/tenants\_config.yaml}. Este archivo contiene los campos requeridos, las categorías y los enrutamiento por cruce de las prioridades.
 
 La lógica arquitectónica reposa sobre dos pilares:
 \begin{itemize}
@@ -81,14 +82,13 @@ La lógica arquitectónica reposa sobre dos pilares:
 
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.8\textwidth]{arquitectura_hexagonal.png}
+\includegraphics[width=0.8\textwidth]{arquitectura_hexagonal.jpg}
 \caption{Diagrama de Arquitectura Hexagonal y Pipeline Asíncrono.}
 \label{fig:arq_hexagonal}
 \end{figure*}
 
 \subsection{Tolerancia a Fallos Multimodelo (Fallback)}
 
-Durante el ciclo de desarrollo trabajando con la IA \textit{llama3-70b-8192} mediante Groq, ocurrieron errores críticos (\textit{400 Bad Request} por modelos deprecados y \textit{APIConnectionError}).
 
 Previendo la inestabilidad inherente de las integraciones de terceros y las penalizaciones por \textit{Rate Limits} (HTTP 429), se introdujo una clase \texttt{LLMManager}. Este \textit{Proxy Adapter} enmascara los errores del modelo rápido primario (Groq) reintentando de forma autónoma y silenciosa con un motor \textit{Fallback} de contingencia (Google Gemini 2.5). Las pruebas demostraron viabilidad absoluta: ante la caída total del modelo primario, las subrutinas de la PQR procedieron hasta el final arrojando respuestas de éxito (HTTP 200).
 
