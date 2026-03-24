@@ -39,11 +39,14 @@ with open(_yaml_path, "r", encoding="utf-8") as f:
     _yaml_config = yaml.safe_load(f)
 
 
+# Proveedores LLM — se crean una sola vez y se reutilizan en cada request.
+_groq_adapter = GroqAdapter()
+_gemini_adapter = GeminiAdapter()
+
+
 def _get_llm_provider() -> LLMManager:
     """Crea el LLMManager con fallback Groq → Gemini."""
-    primary = GroqAdapter()
-    secondary = GeminiAdapter()
-    return LLMManager(primary=primary, secondary=secondary)
+    return LLMManager(primary=_groq_adapter, secondary=_gemini_adapter)
 
 
 def _get_orchestrator(
@@ -81,6 +84,8 @@ def _get_orchestrator(
 )
 async def procesar_solicitud(
     request: SolicitudInput,
+    simular_fallos_bpo: bool = False,
+    simular_duplicado: bool = False,
     orchestrator: PipelineOrchestrator = Depends(_get_orchestrator),
 ) -> SolicitudOutput:
     """Endpoint principal para procesar solicitudes del BPO."""
@@ -88,8 +93,26 @@ async def procesar_solicitud(
         f"Solicitud recibida: compania='{request.compania}', "
         f"solicitud_id='{request.solicitud_id}'"
     )
+
+    # Feature Flag dinámico: override del setting por query param
+    if simular_fallos_bpo:
+        from app.core.config import get_settings
+        get_settings().SIMULAR_FALLOS_BPO = True
+    else:
+        from app.core.config import get_settings
+        get_settings().SIMULAR_FALLOS_BPO = False
+
     try:
         result = await orchestrator.run(request)
+
+        # Bono Duplicados: si el toggle está activo, re-enviar para provocar 409
+        if simular_duplicado:
+            try:
+                await orchestrator.run(request)
+            except DuplicateRequestError as e:
+                logger.info(f"Simulación de duplicado exitosa: {e}")
+                raise HTTPException(status_code=409, detail=str(e))
+
         return result
     except CompanyNotFoundError as e:
         logger.warning(f"Compañía no encontrada: {e}")

@@ -30,7 +30,7 @@ function App() {
     }, 1200); 
 
     try {
-      const resp = await fetch(`http://localhost:8000/api/v1/solicitudes?simular_fallos_bpo=${values.simularFalla}`, {
+      const resp = await fetch(`http://localhost:8000/api/v1/solicitudes?simular_fallos_bpo=${values.simularFalla}&simular_duplicado=${values.simularDuplicado}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -7,7 +7,6 @@ Autenticación vía SDK (Application Default Credentials) o API key.
 
 import json
 import logging
-import re
 
 from pydantic import ValidationError
 
@@ -31,12 +30,7 @@ logger = logging.getLogger(__name__)
 PROVIDER_NAME = "Gemini"
 
 
-def _clean_json_response(text: str) -> str:
-    """Limpia bloques de Markdown del output del LLM."""
-    text = text.strip()
-    text = re.sub(r"^```(?:json)?\s*\n?", "", text)
-    text = re.sub(r"\n?```\s*$", "", text)
-    return text.strip()
+from app.adapters.utils import clean_json_response as _clean_json_response
 
 
 class GeminiAdapter(ILLMProvider):
@@ -61,7 +55,7 @@ class GeminiAdapter(ILLMProvider):
         # google-generativeai no tiene API async nativa, usamos run_in_executor
         full_prompt = f"{system_prompt}\n\n---\n\nSolicitud del cliente:\n{user_text}"
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         response = await loop.run_in_executor(
             None,
             lambda: self._model.generate_content(

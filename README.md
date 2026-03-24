@@ -21,7 +21,7 @@ resiliencia en llamadas al LLM.
 
 *   **Multitenant Data-Driven:** Orquestación de reglas de cliente (entidades, categorías y matrices de enrutamiento) a nivel de metadatos (YAML). Respeta 100% el principio **Open/Closed (SOLID)**. Nuevos clientes se suman sin tocar código.
 *   **Pipeline con IA (Chain of Responsibility):** Flujo de 6 pasos (Validar → Clasificar → Priorizar → Justificar → Enrutar → Gestión Externa) coordinado de manera asíncrona.
-*   **Resiliencia LLM (Fallback):** Integración nativa asíncrona con **Groq (llama3-70b)** como IA principal y **Google Gemini (gemini-2.5-flash)** como IA de respaldo automático.
+*   **Resiliencia LLM (Fallback):** Integración nativa asíncrona con **Groq (llama-3.3-70b-versatile)** como IA principal y **Google Gemini (gemini-2.5-flash)** como IA de respaldo automático.
 *   **Bono Mensajería del Valle (+6):** Implementación del Patrón Strategy para soportar la priorización vía servicio externo (Mocks) exclusivo para este cliente.
 *   **Bono de Duplicados (+4):** Cache en memoria para descartar peticiones idempotentes ya procesadas (`HTTP 409 Conflict`).
 *   **Bono Resiliencia BPO (+4):** Adaptador de plataforma cliente externo con control de fallos emulados vía Feature Flag (`SIMULAR_FALLOS_BPO`).

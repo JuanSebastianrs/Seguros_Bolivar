@@ -10,6 +10,7 @@ export interface FormValues {
   compania: string;
   descripcion: string;
   simularFalla: boolean;
+  simularDuplicado: boolean;
 }
 
 interface Props {
@@ -29,11 +30,12 @@ export function PQRSubmissionForm({ onSubmit, isLoading }: Props) {
   const [compania, setCompania] = React.useState(COMPANIES[0].value)
   const [descripcion, setDescripcion] = React.useState("")
   const [simularFalla, setSimularFalla] = React.useState(false)
+  const [simularDuplicado, setSimularDuplicado] = React.useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!descripcion.trim()) return;
-    onSubmit({ compania, descripcion, simularFalla })
+    onSubmit({ compania, descripcion, simularFalla, simularDuplicado })
   }
 
   return (
@@ -65,9 +67,17 @@ export function PQRSubmissionForm({ onSubmit, isLoading }: Props) {
       <div className="flex items-center justify-between pt-2">
         <div className="flex flex-col">
           <span className="text-sm font-bold text-slate-800">Simular Falla de Red BPO</span>
-          <span className="text-xs text-slate-500">Activa flujo de contingencia y reintento</span>
+          <span className="text-xs text-slate-500">Bono +4% — Resiliencia ante caída de plataforma externa</span>
         </div>
         <Switch checked={simularFalla} onCheckedChange={setSimularFalla} disabled={isLoading} />
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-slate-800">Simular Solicitud Duplicada</span>
+          <span className="text-xs text-slate-500">Bono +4% — Demuestra idempotencia (HTTP 409)</span>
+        </div>
+        <Switch checked={simularDuplicado} onCheckedChange={setSimularDuplicado} disabled={isLoading} />
       </div>
 
       <Button type="submit" size="lg" className="w-full mt-2 bg-slate-900 text-white hover:bg-slate-800 gap-2 transition-all" disabled={isLoading || !descripcion.trim()}>

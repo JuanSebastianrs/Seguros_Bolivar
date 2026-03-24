@@ -7,7 +7,6 @@ para máxima precisión analítica.
 
 import json
 import logging
-import re
 
 from groq import AsyncGroq
 from pydantic import ValidationError
@@ -33,17 +32,7 @@ logger = logging.getLogger(__name__)
 PROVIDER_NAME = "Groq"
 
 
-def _clean_json_response(text: str) -> str:
-    """Limpia bloques de Markdown del output del LLM.
-
-    Los LLMs suelen envolver JSON en ```json ... ```.
-    Esta función los elimina para poder parsear correctamente.
-    """
-    text = text.strip()
-    # Eliminar bloques de Markdown
-    text = re.sub(r"^```(?:json)?\s*\n?", "", text)
-    text = re.sub(r"\n?```\s*$", "", text)
-    return text.strip()
+from app.adapters.utils import clean_json_response as _clean_json_response
 
 
 class GroqAdapter(ILLMProvider):

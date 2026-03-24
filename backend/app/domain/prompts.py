@@ -15,10 +15,7 @@ def prompt_extraccion(campos_obligatorios: list[str]) -> str:
         "Tu tarea es analizar la solicitud del cliente y extraer "
         f"EXACTAMENTE los siguientes campos: {campos_str}. "
         "Devuelve un JSON donde las llaves sean los nombres de los campos. "
-        "Si un campo no se menciona explícitamente en el texto, su valor DEBE ser null. "
-        "\nREGLAS ESTRICTAS DE EXTRACCIÓN:\n"
-        "- 'solicitud_id_cliente': Es EXCLUSIVAMENTE el NÚMERO de identificación (ej. 102045678).\n"
-        "- 'solicitud_tipo_id_cliente': Es EXCLUSIVAMENTE el TIPO de documento (ej. CC, NIT, CE, Pasaporte)."
+        "Si un campo no se menciona explícitamente en el texto, su valor DEBE ser null."
     )
 
 

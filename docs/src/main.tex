@@ -1,1 +1,137 @@
-# Docs src folder
+
+\documentclass[twocolumn]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{caption}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage{tocbibind}
+\usepackage{titletoc}
+\usepackage{amsthm}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage{booktabs}
+\newtheorem{definition}{Definición}[section]
+\numberwithin{definition}{subsection}
+\geometry{a4paper, margin=1in}
+
+\title{\textbf{Automatización Inteligente BPO: Diseño y Arquitectura de Microservicio con IA}}
+\author{
+    Juan Sebastian Rodriguez Salazar \\
+    \textit{Seguros Bolívar}\\
+    \textit{Caso de Estudio IA - Profesional Senior}\\
+    \textit{Arquitectura Cloud y Modelos de Lenguaje}
+}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este documento técnico detalla el diseño, arquitectura y estrategias de escalabilidad para el microservicio backend automatizado desarrollado para una empresa BPO. La solución centraliza el procesamiento de tickets  para múltiples clientes utilizando Inteligencia Artificial, sin necesidad de duplicar código.
+
+Basado en los principios de la Arquitectura Hexagonal y garantizando el principio Open/Closed, la regla de negocio es extraída a una capa de metadatos (YAML). Se implementaron patrones como \textit{Chain of Responsibility} para el ciclo de vida de 6 etapas de la PQR y \textit{Strategy} para el enrutamiento multi-cliente. Para garantizar un SLA crítico, se diseñó un \textit{Proxy de Fallback} asíncrono que alterna entre el modelo primario (Groq LPU) y el secundario (Google Gemini) ante cualquier anomalía de red o cuota. 
+
+Aquí se expone la metodología empleada, la superación de retos de seguridad, la recolección de métricas de resiliencia y el camino hacia un despliegue nativo en la nube utilizando contenedores inmutables en Google Cloud Run y gestión de secretos criptográficos.
+\end{abstract}
+
+\section{Introducción}
+
+La prueba tecnica radica en la gestión manual de solicitudes PQR de texto libre ya que es uno de los mayores cuellos de botella operativos en una empresa BPO. El reto princial esta en interpretar el lenguaje natural, abstraer entidades clave e inyectar el resultado estructurado en el CRM de la compañía cliente. 
+
+El microservicio aquí presentado automatiza este flujo mediante un pipeline de seis pasos lógicos: \textit{Validar, Clasificar, Priorizar, Justificar, Enrutar} y \textit{Gestionar la plataforma externa}. Para lograrlo, se emplea un clúster de Inteligencia Artificial (LLM) que procesa la semántica del usuario apoyado por directrices estructuradas a nivel de prompts deterministas.
+
+A continuación, se describen las decisiones ingenieriles, los patrones matemáticos de código adoptados (Arquitectura Hexagonal), la estrategia de Cloud Computing seleccionada (GCP) para el despliegue del contendor actual y cómo se resolvieron problemas de consistencia semántica en los requerimientos del negocio.
+
+\section{Ingeniería de Contexto y Agentic Workflows}
+
+Acorde a las vanguardias de la ingeniería de software, el ciclo de vida de este desarrollo implementó metodologías de desarrollo asistido por IA (\textit{Agentic Workflows}). 
+
+Se construyó un marco de contexto estricto (\textit{Context Engineering}) definiendo contratos \texttt{Pydantic}, interfaces abstractas y diagramas de estado. Esta base documental rigurosa fue utilizada para orquestar agentes generativos (mediante el entorno Antigravity), logrando materializar el código de manera predecible y determinista. 
+
+Este enfoque multiplicó la velocidad de entrega, demostrando que el manejo de las herramientas de AI para el desarrollo permite producir código robusto que respete los principios SOLID y la Arquitectura Hexagonal.
+
+\section{Diseño Arquitectónico y Metodología}
+
+La solución fue concebida iterativamente con el objetivo principal de aislar las reglas de negocio del framework web (FastAPI) y de los proveedores del LLM, habilitando expansiones futuras de manera inocua.
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=1\textwidth]{diagrama_arquitectura.jpg}
+\caption{Diagrama de Arquitectura Hexagonal, Inversión de Dependencias y orquestación BPO.}
+\label{fig:arquitectura}
+\end{figure*}
+
+\vspace{1.0cm}
+\subsection{Abstracción Multi-Tenant y Patrones}
+
+El principal reto era cumplir el principio \textit{Open/Closed (SOLID)}. Para evitar modificar código fuente ante el ingreso de una nueva compañía al BPO, se centralizaron las reglas de negocio en el archivo \texttt{data/tenants\_config.yaml}. Este archivo contiene los campos requeridos, las categorías y el enrutamiento por cruce de las prioridades.
+
+La lógica arquitectónica reposa sobre dos pilares:
+\begin{itemize}
+    \item \textbf{Chain of Responsibility:} El \texttt{PipelineOrchestrator} orquesta el ciclo de vida. Incluye lógica de \textit{Early Exit}: si en el primer paso el LLM advierte que faltan datos (p. ej., el cliente no da su cédula), el pipeline corta el flujo protegiendo la plataforma y el gasto de IA.
+    \item \textbf{Strategy Pattern:} La \texttt{StrategyFactory} asigna un comportamiento de negocio según la organización. Mientras la mayoría de clientes delegan el cálculo de prioridad en el LLM , clientes especiales (como "Mensajería del Valle") utilizan un puente REST mockeado inyectando su lógica propia de negocio a través de \texttt{MensajeriaValleStrategy}.
+\end{itemize}
+
+\begin{figure*}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{arquitectura_hexagonal.jpg}
+\caption{Diagrama de Arquitectura Hexagonal y Pipeline Asíncrono.}
+\label{fig:arq_hexagonal}
+\end{figure*}
+
+\subsection{Tolerancia a Fallos Multimodelo (Fallback)}
+
+
+Previendo la inestabilidad inherente de las integraciones de terceros y las penalizaciones por \textit{Rate Limits} (HTTP 429), se introdujo una clase \texttt{LLMManager}. Este \textit{Proxy Adapter} enmascara los errores del modelo rápido primario (Groq) reintentando de forma autónoma y silenciosa con un motor \textit{Fallback} de contingencia (Google Gemini 2.5). Las pruebas demostraron viabilidad absoluta: ante la caída total del modelo primario, las subrutinas de la PQR procedieron hasta el final arrojando respuestas de éxito (HTTP 200).
+
+\section{Estrategia Cloud, Seguridad y Docker}
+
+Trascendiendo el funcionamiento lógico, un microservicio corporativo requiere robustez y protección contra vulnerabilidades cibernéticas, empaquetamiento confiable y diseño de nube de alta disponibilidad.
+
+\subsection{Contenerización Serverless (GCP Cloud Run)}
+
+El código entregado ya cuenta con garantía de inmutabilidad al incluir su \texttt{Dockerfile} y \texttt{docker-compose.yml}. Esto aisla la ejecución independientemente de la máquina del desarrollador.
+
+En lugar de aprovisionar clusters de alta complejidad (ej. Kubernetes), el contenedor actual es el candidato óptimo para su despliegue en \textbf{Google Cloud Run}. Esta plataforma serverless facilita el escalamiento a cero (\textit{scale-to-zero}) minimizando facturación en tiempos de inactividad, con capacidad de disparar paralelamente centenares de instancias cuando la carga transaccional del BPO así lo exija.
+
+\subsection{Seguridad, Auth y Secrets Manager}
+
+El cuidado estricto sobre las credenciales externas dictamina que parámetros confidenciales como \texttt{GROQ\_API\_KEY} o contraseñas de bases de datos no residen jamás en texto plano. En entorno local interactúan inyectándolas mediante variables \texttt{.env}; y mediante \textbf{Google Secret Manager} o AWS Secrets Manager en la nube productiva.
+
+Asimismo, dado que la capa externa REST será consumida constantemente, se requiere prevenir escenarios de abuso (DDoS o robo de tokens AI). El pipeline en un entorno de produción se proyecta blindarse mediante un middleware global con exigencia de JWT por el marco de \textbf{OAuth 2.0} restringido por la organización.
+
+\section{Optimización y Bug-Fixing del Diseño}
+
+\subsection{Corrección Semántica de Esquemas}
+
+Durante la evaluación de los Mockups entregados de la prueba tecninca se pudo observar en las directrices iniciales del Pdf, se notó una disonancia conceptual: el campo \textit{numérico} del cliente emergía dentro del "tipo de id", como \texttt{solicitud\_tipo\_id\_cliente: "102045678"}, y su género en el identificador \texttt{solicitud\_id\_cliente: "CC"}. 
+
+Para prevenir catástrofes de colisión y modelado relacional, las clases en \texttt{Pydantic} V2 fueron corregidas. Se inyectaron \textit{Reglas Estrictas de Extracción} deterministas en los prompts subyacentes del LLM. Ahora el LLM garantiza obligatoriamente colocar los valores numéricos bajo la llave de ID, salvaguardando la pureza de la ingesta de Data Engineering.
+
+\subsection{Idempotencia del Servicio Múltiple}
+
+La infraestructura incluye un \texttt{ICacheProvider} (\texttt{InMemoryCache}). En lugar de consumir tokens de IA en solicitudes que un usuario impaciente envía dos veces por segundo, se valida el Hash de petición. De migrarse a GCP, el caché volátil actual se vería reemplazado por \textbf{GCP Memorystore (Redis)} para cruzar validaciones de colisión idéntica a través de concurrencia multihilo de Cloud Run.
+
+\subsection{Frontend React y Diseño Atómico}
+
+De manera complementaria, se desarrolló una interfaz web SPA (Single Page Application) utilizando React, TypeScript y TailwindCSS. La arquitectura del frontend sigue la metodología \textit{Atomic Design} (separando componentes en átomos, moléculas y organismos), garantizando alta modularidad. Esta interfaz visualiza el flujo progresivo del orquestador y expone \textit{toggles} interactivos para simular tanto caídas de red del CRM externo como solicitudes duplicadas, facilitando la evaluación de las métricas de contingencia implementadas.
+
+\section{Conclusiones}
+
+Este proyecto abordó holísticamente la integración de automatismos LLM dentro de arquitecturas transaccionales resilientes. El acoplamiento estricto del patrón \textit{Chain of Responsibility} dotado de la matriz multi-tenant (YAML) posibilitó resolver las 6 directivas de manera desacoplada.  
+
+La integración robusta del motor asíncrono secundario y falsificación de APIS (mocks transaccionales en \texttt{BPOExternalAdapter}) no solo brindaron tolerancia a caídas del BPO en la retención del log (\textit{Pendiente por sincronización}) sino que aseguraron con suficiencia el sistema ante anomalías cloud imprevistas. 
+
+El microservicio PQR cumple así rigor empresarial, se halla empaquetado y perfilado de forma madura para escalamientos orgánicos \textit{Serverless} en la ecosfera de Google Cloud.
+
+\vspace{0.5cm}
+\textbf{Repositorio del Proyecto:} \url{https://github.com/JuanSebastianrs/Seguros_Bolivar}
+
+\end{document}

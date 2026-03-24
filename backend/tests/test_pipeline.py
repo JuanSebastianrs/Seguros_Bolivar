@@ -27,8 +27,8 @@ async def test_pipeline_happy_path_gestion_externa(orchestrator, sample_request)
     assert result.proximo_paso == "GESTIÓN EXTERNA"
     assert result.estado == "pendiente"
     assert result.solicitud_id_plataforma_externa == "ID-MOCK-123"
-    assert result.solicitud_id_cliente == "CC"
-    assert result.solicitud_tipo_id_cliente == "102045678"
+    assert result.solicitud_id_cliente == "102045678"
+    assert result.solicitud_tipo_id_cliente == "CC"
     assert len(result.justificacion) > 0
 
 
